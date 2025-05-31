@@ -1,4 +1,5 @@
 package main
+
 import "fmt"
 
 type date struct {
@@ -18,6 +19,7 @@ type Assessment struct {
 type dataUser [1000]Assessment
 
 var dataAssessment dataUser
+var sort dataUser
 var jumlahData int
 
 func main() {
@@ -27,8 +29,11 @@ func main() {
 
 // Fungsi utama untuk menampilkan menu by Cathya
 func mainMenu() {
+
+	sort = dataAssessment
+
 	var pilihan int
-	for pilihan != 7 {
+	for pilihan != 8 {
 		fmt.Println("------------------------------")
 		fmt.Println(" 		M A I N  M E N U       ")
 		fmt.Println("------------------------------")
@@ -38,9 +43,10 @@ func mainMenu() {
 		fmt.Println("4. Hapus Data")
 		fmt.Println("5. Dapatkan Rekomendasi")
 		fmt.Println("6. Cari Data Berdasarkan Skor")
-		fmt.Println("7. Keluar")
+		fmt.Println("7. Data Ekstrim")
+		fmt.Println("8. Keluar")
 		fmt.Println("------------------------------")
-		fmt.Print("Masukkan pilihan Anda (1-6): ")
+		fmt.Print("Masukkan pilihan Anda (1-8): ")
 		fmt.Scanln(&pilihan)
 
 		if pilihan == 1 {
@@ -49,27 +55,47 @@ func mainMenu() {
 			fmt.Println("\n--- Data Asli (Sebelum Diurutkan) ---")
 			tampilkanDataTabel(dataAssessment, jumlahData)
 			var sortPilihan int
-			for sortPilihan != 3 {
+			var kode int
+			var kondisi bool = true
+			for kondisi {
 				fmt.Println("\n--- Ingin Mengurutkan? ---")
 				fmt.Println("1. Urutkan Ascending (Skor dari kecil ke besar)")
 				fmt.Println("2. Urutkan Descending (Skor dari besar ke kecil)")
-				fmt.Println("3. Kembali ke Menu Utama")
-				fmt.Print("Masukkan pilihan (1/2/3): ")
-				fmt.Scanln(&sortPilihan)
+				if sortPilihan == 1 || sortPilihan == 2 {
+					fmt.Println("3. Kembalikan ke semula")
+					fmt.Println("4. Kembali ke Menu Utama")
+					fmt.Print("\nMasukkan pilihan (1/2/3/4): ")
+					fmt.Scanln(&sortPilihan)
+					kode = 0
+				} else {
+					fmt.Println("3. Kembali ke Menu Utama")
+					fmt.Print("\nMasukkan pilihan (1/2/3): ")
+					fmt.Scanln(&sortPilihan)
+					kode = 1
+				}
 
 				if sortPilihan == 1 {
-					insertionSortData(&dataAssessment, jumlahData, true)
+					insertionSortData(&sort, jumlahData, true)
 					fmt.Println("\n--- Data Setelah Diurutkan Ascending ---")
-					tampilkanDataTabel(dataAssessment, jumlahData)
+					tampilkanDataTabel(sort, jumlahData)
 				} else if sortPilihan == 2 {
-					insertionSortData(&dataAssessment, jumlahData, false)
+					insertionSortData(&sort, jumlahData, false)
 					fmt.Println("\n--- Data Setelah Diurutkan Descending ---")
-					tampilkanDataTabel(dataAssessment, jumlahData)
-				} else if sortPilihan != 3 {
+					tampilkanDataTabel(sort, jumlahData)
+				} else if sortPilihan == 3 {
+					if kode == 0 {
+						selectionSortTanggal(&dataAssessment, jumlahData)
+						fmt.Println("\n--- Telah Dikembalikan Seperti Sebelum Diurutkan ---")
+						tampilkanDataTabel(dataAssessment, jumlahData)
+					} else {
+						kondisi = false
+					}
+				} else if sortPilihan == 4 && kode == 0 {
+					kondisi = false
+				} else if sortPilihan != 3 || sortPilihan != 4 {
 					fmt.Println("Pilihan tidak valid.")
 				}
 			}
-			isiDummySebulan(&dataAssessment, &jumlahData)
 		} else if pilihan == 2 {
 			var d date
 			fmt.Print("Masukkan tanggal (dd mm yyyy): ")
@@ -106,29 +132,35 @@ func mainMenu() {
 			var skor int
 			fmt.Print("Masukkan skor self-assessment (0-10): ")
 			fmt.Scan(&skor)
-			fmt.Println("Rekomendasi:", beriRekomendasi(skor))
+			beriRekomendasi(skor)
 			kembaliKeMenu()
 		} else if pilihan == 6 {
 			var skorCari int
-  			fmt.Print("Masukkan skor yang ingin dicari: ")
-    		fmt.Scan(&skorCari)
+			fmt.Print("Masukkan skor (umum) yang ingin dicari: ")
+			fmt.Scan(&skorCari)
 
-    		//pastikan data telah diurutkan (terurut naik)
-    		insertionSortData(&dataAssessment, jumlahData, true)
+			//pastikan data telah diurutkan (terurut naik)
+			insertionSortData(&sort, jumlahData, true)
 
-    		indeks := binarySearchSkor(dataAssessment, jumlahData, skorCari)
-    		if indeks != -1 {
-        		fmt.Println("Data dengan skor ditemukan:")
-        		tampilkanSatuData(dataAssessment[indeks])
-    		} else {
-        		fmt.Println("Skor tidak ditemukan dalam data.")
-    		}
-    		kembaliKeMenu()
+			indeks := binarySearchSkor(dataAssessment, jumlahData, skorCari)
+			if indeks != -1 {
+				fmt.Println("\nData dengan skor ditemukan:")
+				tampilkanSatuData(dataAssessment[indeks])
+			} else {
+				fmt.Println("\nSkor tidak ditemukan dalam data.")
+			}
+			kembaliKeMenu()
 		} else if pilihan == 7 {
-   			fmt.Println("Terima kasih telah menggunakan aplikasi.")
+			tampilkanInfoEkstrim(dataAssessment, jumlahData)
+			kembaliKeMenu()
+		} else if pilihan == 8 {
+			fmt.Println("\nTerima kasih telah menggunakan aplikasi.")
+			fmt.Println()
 		} else {
-			fmt.Println("Pilihan tidak valid.")
+			fmt.Println("\nPilihan tidak valid.")
+			kembaliKeMenu()
 		}
+		sort = dataAssessment
 	}
 }
 
@@ -141,13 +173,13 @@ func kembaliKeMenu() {
 
 // Fungsi isi dummy by Wijdan
 func isiDummySebulan(a *dataUser, jumlah *int) {
-	moodList := [30]string {
-		"Senang", "Senang", "Netral", "Cemas", "Cemas",
-		"Sedih", "Sedih", "Senang", "Netral", "Marah",
-		"Takut", "Netral", "Senang", "Senang", "Cemas",
-		"Sedih", "Netral", "Marah", "Takut", "Senang",
-		"Netral", "Cemas", "Sedih", "Senang", "Marah",
-		"Takut", "Senang", "Sedih", "Marah", "Senang",
+	moodList := [30]string{
+		"Malas", "Senang", "Netral", "Cemas", "Cemas",
+		"Semangat", "Sedih", "Takut", "Netral", "Marah",
+		"Takut", "Bosan", "Senang", "Putus Asa", "Cemas",
+		"Percaya Diri", "Netral", "Marah", "Syukur", "Lelah",
+		"Marah", "Cemas", "Semangat", "Lelah", "Marah",
+		"Syukur", "Malu", "Sedih", "Tenang", "Marah",
 	}
 
 	*jumlah = 0
@@ -170,19 +202,19 @@ func tampilkanDataTabel(a dataUser, jumlah int) {
 		fmt.Println("Belum ada data.")
 		return
 	}
-	fmt.Println("-------------------------------------------------------------------------------------------")
-	fmt.Printf("| %-10s | %-10s | %-5s | %-10s | %-40s |\n", "Tanggal", "Mood", "Skor", "Skor Mood", "Catatan")
-	fmt.Println("-------------------------------------------------------------------------------------------")
+	fmt.Println("---------------------------------------------------------------------------------------------------")
+	fmt.Printf("| %-10s | %-13s | %-10s | %-10s | %-40s |\n", "Tanggal", "Mood", "Skor Umum", "Skor Mood", "Catatan")
+	fmt.Println("---------------------------------------------------------------------------------------------------")
 	for i := 0; i < jumlah; i++ {
 		t := a[i].Tanggal
-		fmt.Printf("| %02d/%02d/%04d | %-10s | %-5d | %-10d | %-40s |\n",
+		fmt.Printf("| %02d/%02d/%04d | %-13s | %-10d | %-10d | %-40s |\n",
 			t.hari, t.bulan, t.tahun,
 			a[i].MoodUtama,
 			a[i].Skor,
 			a[i].SkorMoodUtama,
 			ringkasCatatan(a[i].Catatan, 40))
 	}
-	fmt.Println("-------------------------------------------------------------------------------------------")
+	fmt.Println("---------------------------------------------------------------------------------------------------")
 }
 
 func ringkasCatatan(s string, max int) string {
@@ -210,8 +242,6 @@ func tambahAssessment(t date, skor int, skorMood int, mood string, catatan strin
 }
 
 // Cari data (tanggal) by Wijdan
-// sementara kami buat ini dengan metode sequential search nanti akan kami optimasi
-// dengan binary search
 func cariDataBerdasarkanTanggal(a dataUser, jumlah int, d date) {
 	found := false
 	for i := 0; i < jumlah; i++ {
@@ -227,6 +257,7 @@ func cariDataBerdasarkanTanggal(a dataUser, jumlah int, d date) {
 
 // Tampilkan satu data by Wijdan
 func tampilkanSatuData(a Assessment) {
+	fmt.Println("\n--------------------------")
 	fmt.Printf("Tanggal: %02d/%02d/%d\n", a.Tanggal.hari, a.Tanggal.bulan, a.Tanggal.tahun)
 	fmt.Println("Mood Utama:", a.MoodUtama)
 	fmt.Printf("Skor Mood Utama: %d/10\n", a.SkorMoodUtama)
@@ -254,21 +285,35 @@ func hapusData(t date) {
 	fmt.Println("Data berhasil dihapus.")
 }
 
-// Fungsi rekomendasi (masih tahap pengembangan) by Cathya
-func beriRekomendasi(skor int) string {
+// Fungsi rekomendasi by Cathya
+func beriRekomendasi(skor int) {
+	var teks string
 	switch {
 	case skor <= 3:
-		return "Luangkan waktu untuk istirahat."
+		teks = "Luangkan waktu untuk istirahat."
 	case skor <= 6:
-		return "Cobalah teknik pernapasan atau meditasi."
+		teks = "Cobalah teknik pernapasan atau meditasi."
 	case skor <= 8:
-		return "Pertahankan keseimbangan dan tetap waspada terhadap stres."
+		teks = "Pertahankan keseimbangan dan tetap waspada terhadap stres."
 	default:
-		return "Kondisi Anda baik, lanjutkan dengan aktivitas positif <3"
+		teks = "Kondisi Anda baik, lanjutkan dengan aktivitas positif <3"
 	}
+
+	panjang := len(teks) + 4
+	fmt.Println()
+	for i := 0; i < panjang; i++ {
+		fmt.Print("*")
+	}
+	fmt.Println()
+	fmt.Printf("* %s *\n", teks)
+
+	for i := 0; i < panjang; i++ {
+		fmt.Print("*")
+	}
+	fmt.Println()
 }
 
-// Fungsi insertion sort untuk mengurutkan data berdasarkan skor by Wijdan
+// Fungsi untuk mengurutkan data berdasarkan skor by Wijdan
 func insertionSortData(a *dataUser, jumlah int, ascending bool) {
 	for i := 1; i < jumlah; i++ {
 		temp := a[i]
@@ -288,24 +333,22 @@ func insertionSortData(a *dataUser, jumlah int, ascending bool) {
 	}
 }
 
-//binarySearchSkor mencari skor tertentu dalam data yang telah diurutkan by Nada
-// nanti mungkin akan kami buat fitur pencarian skor mingguan dengan sequential search
-// ditukar dengan fitur cari data tanggal yang akan beralih ke binary search
+//Mencari skor tertentu dalam data yang telah diurutkan by Nada
 func binarySearchSkor(a dataUser, jumlah int, targetSkor int) int {
-    left := 0
-    right := jumlah - 1
+	left := 0
+	right := jumlah - 1
 
-    for left <= right {
-        mid := (left + right) / 2
-        if a[mid].Skor == targetSkor {
-            return mid // Skor ditemukan
-        } else if a[mid].Skor < targetSkor {
-            left = mid + 1
-        } else {
-            right = mid - 1
-        }
-    }
-    return -1 //skor tidak ditemukan
+	for left <= right {
+		mid := (left + right) / 2
+		if a[mid].Skor == targetSkor {
+			return mid // Skor ditemukan
+		} else if a[mid].Skor < targetSkor {
+			left = mid + 1
+		} else {
+			right = mid - 1
+		}
+	}
+	return -1 //skor tidak ditemukan
 }
 
 // Fungsi selection sort untuk mengurutkan data berdasarkan tanggal by Wijdan
@@ -339,5 +382,46 @@ func lebihAwal(t1, t2 date) bool {
 	return false
 }
 
-// Coming soon: Fungsi Implementasi Nilai Ekstrim by Cathya
-// Comming soon: Fungsi untuk menampilkan grafik by ??
+// Fungsi untuk menampilkan informasi skor tertinggi dan terendah (implementasi nilai ekstrim) by Cathya
+func tampilkanInfoEkstrim(a dataUser, jumlah int) {
+	if jumlah == 0 {
+		fmt.Println("Belum ada data.")
+		return
+	}
+
+	skorTertinggi := a[0].Skor
+	skorTerendah := a[0].Skor
+
+	for i := 1; i < jumlah; i++ {
+		if a[i].Skor > skorTertinggi {
+			skorTertinggi = a[i].Skor
+		}
+		if a[i].Skor < skorTerendah {
+			skorTerendah = a[i].Skor
+		}
+	}
+
+	fmt.Println("\n--- Informasi Skor Ekstrim ---")
+	fmt.Printf("%-12s | %-9s | %-10s | %-10s\n", "Kategori", "Skor Umum", "Tanggal", "Mood")
+	fmt.Println("--------------------------------------------------")
+
+	// Cetak semua skor tertinggi
+	for i := 0; i < jumlah; i++ {
+		if a[i].Skor == skorTertinggi {
+			fmt.Printf("%-12s | %9d | %02d/%02d/%04d | %-10s\n",
+				"Tertinggi", a[i].Skor,
+				a[i].Tanggal.hari, a[i].Tanggal.bulan, a[i].Tanggal.tahun,
+				a[i].MoodUtama)
+		}
+	}
+
+	// Cetak semua skor terendah
+	for i := 0; i < jumlah; i++ {
+		if a[i].Skor == skorTerendah {
+			fmt.Printf("%-12s | %9d | %02d/%02d/%04d | %-10s\n",
+				"Terendah", a[i].Skor,
+				a[i].Tanggal.hari, a[i].Tanggal.bulan, a[i].Tanggal.tahun,
+				a[i].MoodUtama)
+		}
+	}
+}
